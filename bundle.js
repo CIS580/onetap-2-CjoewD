@@ -4,11 +4,13 @@
 /* Classes */
 const Game = require('./game.js');
 const Player = require('./player.js');
+const Monster = require('./monster.js');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
-var player = new Player({x: 382, y: 460})
+var player = new Player({ x: 382, y: 440 });
+var monster = new Monster({ x: 50, y: 100 });
 
 /**
  * @function masterLoop
@@ -32,7 +34,9 @@ masterLoop(performance.now());
  */
 function update(elapsedTime) {
 
-  // TODO: Update the game objects
+    // TODO: Update the game objects
+    player.update(elapsedTime);
+    monster.update(elapsedTime);
 }
 
 /**
@@ -46,9 +50,10 @@ function render(elapsedTime, ctx) {
   ctx.fillStyle = "lightblue";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   player.render(elapsedTime, ctx);
+  monster.render(elapsedTime, ctx);
 }
 
-},{"./game.js":2,"./player.js":3}],2:[function(require,module,exports){
+},{"./game.js":2,"./monster.js":3,"./player.js":4}],2:[function(require,module,exports){
 "use strict";
 
 /**
@@ -112,6 +117,72 @@ Game.prototype.loop = function(newTime) {
 /**
  * @module exports the Player class
  */
+module.exports = exports = Monster;
+
+
+/**
+ * @constructor Player
+ * Creates a new player object
+ * @param {Postition} position object specifying an x and y
+ */
+function Monster(position) {
+    this.timer = 0;
+    this.frame = 0;
+    this.direction = 0;
+    this.x = position.x;
+    this.y = position.y;
+    this.width = 16;
+    this.height = 16;
+    this.spritesheet = new Image();
+    this.spritesheet.src = encodeURI('assets/bat/bat.png');
+
+    var self = this;
+}
+
+/**
+ * @function updates the player object
+ * {DOMHighResTimeStamp} time the elapsed time since the last frame
+ */
+Monster.prototype.update = function (time) {
+    this.timer += time;
+
+            if (this.Timer > 1000 / 16) {
+                this.frame = (self.frame++) % 6;
+                this.timer = 0;
+            }
+
+            if (this.direction == 0){
+                this.x -= 1;
+                if (this.x <= 0) this.direction = 1;
+            }
+            else {
+                this.x += 1;
+                if (this.x >= 740) this.direction = 0;
+            }
+    }
+
+/**
+ * @function renders the player into the provided context
+ * {DOMHighResTimeStamp} time the elapsed time since the last frame
+ * {CanvasRenderingContext2D} ctx the context to render into
+ */
+Monster.prototype.render = function (time, ctx) {
+    ctx.drawImage(
+      // image
+      this.spritesheet,
+      // source rectangle
+      this.frame * this.width, 0, this.width, this.height,
+      // destination rectangle
+      this.x, this.y, this.width, this.height
+    );
+}
+
+},{}],4:[function(require,module,exports){
+"use strict";
+
+/**
+ * @module exports the Player class
+ */
 module.exports = exports = Player;
 
 
@@ -121,17 +192,22 @@ module.exports = exports = Player;
  * @param {Postition} position object specifying an x and y
  */
 function Player(position) {
-  this.x = position.x;
-  this.y = position.y;
-  this.width  = 16;
-  this.height = 16;
-  this.spritesheet  = new Image();
-  this.spritesheet.src = encodeURI('assets/link/not link/notlink up.png');
+    this.state = "waiting";
+    this.timer = 0;
+    this.frame = 0;
+    this.x = position.x;
+    this.y = position.y;
+    this.width  = 16;
+    this.height = 16;
+    this.spritesheet  = new Image();
+    this.spritesheet.src = encodeURI('assets/link/not link/notlink up.png');
 
   var self = this;
-  window.onmouseclick = function(event){
-      self.x = event.clientX;
-      self.state = "walking";
+  window.onmousedown = function(event){
+      if (self.state = "waiting") {
+          self.x = event.clientX;
+          self.state = "walking";
+      }
   }
 }
 
@@ -140,8 +216,13 @@ function Player(position) {
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
 Player.prototype.update = function (time) {
+    this.timer += time;
     switch (this.state) {
         case "walking":
+            if (this.Timer > 1000 / 16) {
+                this.frame = (this.frame++) % 4;
+                this.timer = 0;
+            }
             this.y -= 1;
             break;
     }
@@ -157,7 +238,7 @@ Player.prototype.render = function(time, ctx) {
     // image
     this.spritesheet,
     // source rectangle
-    0, 0, this.width, this.height,
+    this.frame * this.width, 0, this.width, this.height,
     // destination rectangle
     this.x, this.y, this.width, this.height
   );
